@@ -83,6 +83,93 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // Add C source files from the c/ directory
+    // Config files - using sysfs_gpio for portability (no external deps)
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Config/DEV_Config.c"),
+        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Config/sysfs_software_spi.c"),
+        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Config/sysfs_gpio.c"),
+        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+    });
+
+    // E-Paper display drivers
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/e-Paper/EPD_2in7.c"),
+        .flags = &.{"-DUSE_DEV_LIB"},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/e-Paper/EPD_2in7_V2.c"),
+        .flags = &.{"-DUSE_DEV_LIB"},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/e-Paper/EPD_2in7b.c"),
+        .flags = &.{"-DUSE_DEV_LIB"},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/e-Paper/EPD_2in7b_V2.c"),
+        .flags = &.{"-DUSE_DEV_LIB"},
+    });
+
+    // GUI/Graphics library
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/GUI/GUI_Paint.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/GUI/GUI_BMPfile.c"),
+        .flags = &.{},
+    });
+
+    // Fonts
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font8.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font12.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font16.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font20.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font24.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font12CN.c"),
+        .flags = &.{},
+    });
+    exe.addCSourceFile(.{
+        .file = b.path("c/lib/Fonts/font24CN.c"),
+        .flags = &.{},
+    });
+
+    // Add include paths for C headers
+    exe.addIncludePath(b.path("c/lib/Config"));
+    exe.addIncludePath(b.path("c/lib/e-Paper"));
+    exe.addIncludePath(b.path("c/lib/GUI"));
+    exe.addIncludePath(b.path("c/lib/Fonts"));
+
+    // Link system libraries needed by the C code
+    exe.linkLibC();
+    // Note: If you get errors about missing gpiod library, you can either:
+    // 1. Install libgpiod-dev on your system
+    // 2. Comment out this line if you're just testing compilation
+    // exe.linkSystemLibrary("gpiod");
+    exe.linkSystemLibrary("m");
+
     // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
     // step). By default the install prefix is `zig-out/` but can be overridden
