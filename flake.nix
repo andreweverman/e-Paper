@@ -34,6 +34,8 @@
             git
             which
             lgpio
+            # GPIO library for Raspberry Pi
+            libgpiod
           ];
 
         };

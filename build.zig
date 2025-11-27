@@ -21,6 +21,10 @@ pub fn build(b: *std.Build) void {
     // target and optimize options) will be listed when running `zig build --help`
     // in this directory.
 
+    // Define platform option for hardware backend
+    const PlatformMode = enum { rpi, jetson };
+    const platform = b.option(PlatformMode, "platform", "Target platform (rpi or jetson)") orelse .rpi;
+
     // This creates a module, which represents a collection of source files alongside
     // some compilation options, such as optimization mode and linked system libraries.
     // Zig modules are the preferred way of making Zig code available to consumers.
@@ -84,19 +88,35 @@ pub fn build(b: *std.Build) void {
     });
 
     // Add C source files from the c/ directory
-    // Config files - using sysfs_gpio for portability (no external deps)
-    exe.addCSourceFile(.{
-        .file = b.path("c/lib/Config/DEV_Config.c"),
-        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
-    });
-    exe.addCSourceFile(.{
-        .file = b.path("c/lib/Config/sysfs_software_spi.c"),
-        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
-    });
-    exe.addCSourceFile(.{
-        .file = b.path("c/lib/Config/sysfs_gpio.c"),
-        .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
-    });
+    // Config files - platform specific
+    switch (platform) {
+        .rpi => {
+            // Raspberry Pi with lgpio library
+            exe.addCSourceFile(.{
+                .file = b.path("c/lib/Config/DEV_Config.c"),
+                .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
+            });
+            exe.addCSourceFile(.{
+                .file = b.path("c/lib/Config/dev_hardware_SPI.c"),
+                .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
+            });
+        },
+        .jetson => {
+            // Jetson/Generic Linux using sysfs (no external deps)
+            exe.addCSourceFile(.{
+                .file = b.path("c/lib/Config/DEV_Config.c"),
+                .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+            });
+            exe.addCSourceFile(.{
+                .file = b.path("c/lib/Config/sysfs_software_spi.c"),
+                .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+            });
+            exe.addCSourceFile(.{
+                .file = b.path("c/lib/Config/sysfs_gpio.c"),
+                .flags = &.{ "-DUSE_DEV_LIB", "-DJETSON" },
+            });
+        },
+    }
 
     // E-Paper display drivers
     exe.addCSourceFile(.{
@@ -164,13 +184,12 @@ pub fn build(b: *std.Build) void {
 
     // Link system libraries needed by the C code
     exe.linkLibC();
-    // Note: If you get errors about missing gpiod library, you can either:
-    // 1. Install libgpiod-dev on your system
-    // 2. Comment out this line if you're just testing compilation
-    // exe.linkSystemLibrary("gpiod");
     exe.linkSystemLibrary("m");
 
-    // This declares intent for the executable to be installed into the
+    // Link platform-specific GPIO library
+    if (platform == .rpi) {
+        exe.linkSystemLibrary("lgpio");
+    } // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
     // step). By default the install prefix is `zig-out/` but can be overridden
     // by passing `--prefix` or `-p`.
