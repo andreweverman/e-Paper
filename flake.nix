@@ -33,6 +33,8 @@
             # Development tools
             git
             which
+            # Image processing
+            imagemagick
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             # GPIO libraries - only available on Linux
             lgpio

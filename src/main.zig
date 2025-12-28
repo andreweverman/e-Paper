@@ -31,7 +31,7 @@ pub fn main() !void {
         c.EPD_2IN7_Clear();
         std.debug.print("Display cleared\n", .{});
 
-        const result = c.GUI_ReadBmp("images/flipclock.bmp", 0, 0);
+        const result = c.GUI_ReadBmp("images/flipclock_mono.bmp", 0, 0);
         if (result != 0) {
             std.debug.print("Failed to read BMP\n", .{});
         }
