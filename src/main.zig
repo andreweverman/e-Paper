@@ -36,7 +36,7 @@ pub fn main() !void {
         defer allocator.free(image_buffer);
 
         // Initialize the paint buffer BEFORE loading the BMP
-        c.Paint_NewImage(image_buffer.ptr, c.EPD_2IN7_WIDTH, c.EPD_2IN7_HEIGHT, c.ROTATE_0, c.WHITE);
+        c.Paint_NewImage(image_buffer.ptr, c.EPD_2IN7_WIDTH, c.EPD_2IN7_HEIGHT, c.ROTATE_270, c.WHITE);
         c.Paint_Clear(c.WHITE);
 
         // Load the BMP into the paint buffer
