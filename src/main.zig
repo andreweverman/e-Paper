@@ -10,7 +10,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const is_mac = builtin.os.tag == .macos;
-    
+
     if (is_mac) std.debug.print("Running from mac, nothing going to display...", .{});
     std.debug.print("OS: {}\n", .{builtin.os.tag});
 
@@ -22,7 +22,6 @@ pub fn main() !void {
     if (init_result == 0 or is_mac) {
         std.debug.print("Device initialized successfully\n", .{});
 
-        std.Thread.sleep(10 * std.time.ns_per_s);
         // Initialize the display
         c.EPD_2IN7_Init();
         std.debug.print("Display initialized\n", .{});
@@ -31,19 +30,20 @@ pub fn main() !void {
         c.EPD_2IN7_Clear();
         std.debug.print("Display cleared\n", .{});
 
-        const result = c.GUI_ReadBmp("images/flipclock_mono.bmp", 0, 0);
-        if (result != 0) {
-            std.debug.print("Failed to read BMP\n", .{});
-        }
-
         // Create an image buffer
         const image_size = (c.EPD_2IN7_WIDTH * c.EPD_2IN7_HEIGHT) / 8;
         const image_buffer = try allocator.alloc(u8, image_size);
         defer allocator.free(image_buffer);
 
-        // Initialize the paint buffer
+        // Initialize the paint buffer BEFORE loading the BMP
         c.Paint_NewImage(image_buffer.ptr, c.EPD_2IN7_WIDTH, c.EPD_2IN7_HEIGHT, c.ROTATE_0, c.WHITE);
         c.Paint_Clear(c.WHITE);
+
+        // Load the BMP into the paint buffer
+        const result = c.GUI_ReadBmp("images/flipclock_mono.bmp", 0, 0);
+        if (result != 0) {
+            std.debug.print("Failed to read BMP\n", .{});
+        }
 
         // Draw some text
         const text = "Hello from Zig!";
