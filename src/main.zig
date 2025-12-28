@@ -1,14 +1,32 @@
 const std = @import("std");
 const e_Paper = @import("e_Paper");
 const c = @import("c_bindings.zig");
+const builtin = @import("builtin");
+const zigimg = @import("zigimg");
 
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var read_buffer: [zigimg.io.DEFAULT_BUFFER_SIZE]u8 = undefined;
+    var image = try zigimg.Image.fromFilePath(allocator, "images/zig.png", &read_buffer);
+    defer image.deinit(allocator);
+
+    const is_mac = builtin.os.tag == .macos;
+
+    var write_buffer: [zigimg.io.DEFAULT_BUFFER_SIZE]u8 = undefined;
+    try image.writeToFilePath(allocator, "images/test.jpeg", write_buffer[0..], .{ .jpeg = .{ .auto_convert = true } });
+
+    if (is_mac) std.debug.print("Running from mac, nothing going to display...", .{});
+    std.debug.print("OS: {}\n", .{builtin.os.tag});
+
     std.debug.print("E-Paper Display Example\n", .{});
 
     // Example of calling C functions from Zig
     // Initialize the device
     const init_result = c.DEV_Module_Init();
-    if (init_result != 0) {
+    if (init_result == 0 or is_mac) {
         std.debug.print("Device initialized successfully\n", .{});
 
         // Initialize the display
@@ -19,9 +37,13 @@ pub fn main() !void {
         c.EPD_2IN7_Clear();
         std.debug.print("Display cleared\n", .{});
 
+        const result = c.GUI_ReadBmp("images/flipclock.bmp", 0, 0);
+        if (result != 0) {
+            std.debug.print("Failed to read BMP\n", .{});
+        }
+
         // Create an image buffer
         const image_size = (c.EPD_2IN7_WIDTH * c.EPD_2IN7_HEIGHT) / 8;
-        var allocator = std.heap.page_allocator;
         const image_buffer = try allocator.alloc(u8, image_size);
         defer allocator.free(image_buffer);
 
@@ -32,6 +54,8 @@ pub fn main() !void {
         // Draw some text
         const text = "Hello from Zig!";
         c.Paint_DrawString_EN(10, 10, text.ptr, c.getFont16(), c.BLACK, c.WHITE);
+
+        std.Thread.sleep(3 * std.time.ns_per_s);
 
         // Draw a rectangle
         c.Paint_DrawRectangle(10, 50, 100, 100, c.BLACK, c.DOT_PIXEL_2X2, c.DRAW_FILL_EMPTY);

@@ -118,6 +118,10 @@ pub extern fn Paint_DrawString_CN(Xstart: UWORD, Ystart: UWORD, pString: [*c]con
 pub extern fn Paint_DrawNum(Xpoint: UWORD, Ypoint: UWORD, Nummber: i32, Font: *const sFONT, Color_Foreground: UWORD, Color_Background: UWORD) void;
 pub extern fn Paint_DrawNumDecimals(Xpoint: UWORD, Ypoint: UWORD, Nummber: f64, Font: *const sFONT, Digit: UWORD, Color_Foreground: UWORD, Color_Background: UWORD) void;
 
+// BMP File Functions
+pub extern fn GUI_ReadBmp(path: [*c]const u8, Xstart: UWORD, Ystart: UWORD) UBYTE;
+pub extern fn GUI_ReadBmp_4Gray(path: [*c]const u8, Xstart: UWORD, Ystart: UWORD) UBYTE;
+
 // Helper function to get pointers to fonts
 pub fn getFont8() *const sFONT {
     return &Font8;

@@ -27,14 +27,15 @@
           buildInputs = with pkgs; [
             # Zig 0.15 - use a recent 0.15 dev build for latest features
             # (zigPkgs."master-2025-07-24" or zigPkgs.master)
-            (zigPkgs."master-2025-08-19" or zigPkgs.master)
+            zigPkgs."0.15.2"
             # ZLS from nixpkgs (should be compatible with Zig 0.15)
             zls
             # Development tools
             git
             which
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+            # GPIO libraries - only available on Linux
             lgpio
-            # GPIO library for Raspberry Pi
             libgpiod
           ];
 

@@ -61,6 +61,11 @@ pub fn build(b: *std.Build) void {
     //
     // If neither case applies to you, feel free to delete the declaration you
     // don't need and to put everything under a single module.
+    const zigimg_dependency = b.dependency("zigimg", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "e_Paper",
         .root_module = b.createModule(.{
@@ -83,23 +88,35 @@ pub fn build(b: *std.Build) void {
                 // can be extremely useful in case of collisions (which can happen
                 // importing modules from different packages).
                 .{ .name = "e_Paper", .module = mod },
+
+                .{ .name = "zigimg", .module = zigimg_dependency.module("zigimg") },
             },
         }),
     });
 
     // Add C source files from the c/ directory
     // Config files - platform specific
+    const is_linux = target.result.os.tag == .linux;
+
     switch (platform) {
         .rpi => {
-            // Raspberry Pi with lgpio library
-            exe.addCSourceFile(.{
-                .file = b.path("c/lib/Config/DEV_Config.c"),
-                .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
-            });
-            exe.addCSourceFile(.{
-                .file = b.path("c/lib/Config/dev_hardware_SPI.c"),
-                .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
-            });
+            if (is_linux) {
+                // Raspberry Pi with lgpio library (Linux only)
+                exe.addCSourceFile(.{
+                    .file = b.path("c/lib/Config/DEV_Config.c"),
+                    .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
+                });
+                exe.addCSourceFile(.{
+                    .file = b.path("c/lib/Config/dev_hardware_SPI.c"),
+                    .flags = &.{ "-DUSE_LGPIO_LIB", "-DRPI" },
+                });
+            } else {
+                // Non-Linux: compile without hardware GPIO support
+                exe.addCSourceFile(.{
+                    .file = b.path("c/lib/Config/DEV_Config.c"),
+                    .flags = &.{"-DUSE_DEV_LIB"},
+                });
+            }
         },
         .jetson => {
             // Jetson/Generic Linux using sysfs (no external deps)
@@ -186,8 +203,8 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.linkSystemLibrary("m");
 
-    // Link platform-specific GPIO library
-    if (platform == .rpi) {
+    // Link platform-specific GPIO library (only on Linux where lgpio is available)
+    if (platform == .rpi and target.result.os.tag == .linux) {
         exe.linkSystemLibrary("lgpio");
     } // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
