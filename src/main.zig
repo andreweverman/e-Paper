@@ -22,12 +22,12 @@ pub fn main() !void {
     if (init_result == 0 or is_mac) {
         std.debug.print("Device initialized successfully\n", .{});
 
-        // Initialize the display
-        c.EPD_2IN7_Init();
+        // Initialize the display (V2 version)
+        c.EPD_2IN7_V2_Init();
         std.debug.print("Display initialized\n", .{});
 
         // Clear the display
-        c.EPD_2IN7_Clear();
+        c.EPD_2IN7_V2_Clear();
         std.debug.print("Display cleared\n", .{});
 
         // Create an image buffer
@@ -49,8 +49,6 @@ pub fn main() !void {
         const text = "Hello from Zig!";
         c.Paint_DrawString_EN(10, 10, text.ptr, c.getFont16(), c.BLACK, c.WHITE);
 
-        std.Thread.sleep(3 * std.time.ns_per_s);
-
         // Draw a rectangle
         c.Paint_DrawRectangle(10, 50, 100, 100, c.BLACK, c.DOT_PIXEL_2X2, c.DRAW_FILL_EMPTY);
 
@@ -58,11 +56,15 @@ pub fn main() !void {
         c.Paint_DrawCircle(130, 75, 20, c.BLACK, c.DOT_PIXEL_1X1, c.DRAW_FILL_FULL);
 
         // Display the image
-        c.EPD_2IN7_Display(image_buffer.ptr);
+        std.debug.print("Sending to display...\n", .{});
+        c.EPD_2IN7_V2_Display(image_buffer.ptr);
         std.debug.print("Image displayed\n", .{});
 
+        // Wait so you can see the result
+        std.Thread.sleep(5 * std.time.ns_per_s);
+
         // Put display to sleep
-        c.EPD_2IN7_Sleep();
+        c.EPD_2IN7_V2_Sleep();
 
         // Exit
         c.DEV_Module_Exit();
