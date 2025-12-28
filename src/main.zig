@@ -22,6 +22,7 @@ pub fn main() !void {
     if (init_result == 0 or is_mac) {
         std.debug.print("Device initialized successfully\n", .{});
 
+        std.Thread.sleep(10 * std.time.ns_per_s);
         // Initialize the display
         c.EPD_2IN7_Init();
         std.debug.print("Display initialized\n", .{});
