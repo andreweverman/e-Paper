@@ -46,14 +46,6 @@ pub fn main() !void {
         }
 
         // Draw some text
-        const text = "Hello from Zig!";
-        c.Paint_DrawString_EN(10, 10, text.ptr, c.getFont16(), c.BLACK, c.WHITE);
-
-        // Draw a rectangle
-        c.Paint_DrawRectangle(10, 50, 100, 100, c.BLACK, c.DOT_PIXEL_2X2, c.DRAW_FILL_EMPTY);
-
-        // Draw a filled circle
-        c.Paint_DrawCircle(130, 75, 20, c.BLACK, c.DOT_PIXEL_1X1, c.DRAW_FILL_FULL);
 
         // Display the image
         std.debug.print("Sending to display...\n", .{});
