@@ -9,15 +9,8 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var read_buffer: [zigimg.io.DEFAULT_BUFFER_SIZE]u8 = undefined;
-    var image = try zigimg.Image.fromFilePath(allocator, "images/zig.png", &read_buffer);
-    defer image.deinit(allocator);
-
     const is_mac = builtin.os.tag == .macos;
-
-    var write_buffer: [zigimg.io.DEFAULT_BUFFER_SIZE]u8 = undefined;
-    try image.writeToFilePath(allocator, "images/test.jpeg", write_buffer[0..], .{ .jpeg = .{ .auto_convert = true } });
-
+    
     if (is_mac) std.debug.print("Running from mac, nothing going to display...", .{});
     std.debug.print("OS: {}\n", .{builtin.os.tag});
 
